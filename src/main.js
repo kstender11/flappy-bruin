@@ -23,7 +23,18 @@ scene.add(bruin.mesh);
 let pipes = [];
 let pipeSpawnInterval = 250;
 let frameCount = 0;
- 
+
+function spawnPipe() {
+    const lastPipe = pipes[pipes.length - 1];
+    const pipeSpacing = 5; 
+    const gapHeight = 2 + Math.random() * 2;
+    const gapYPosition = (Math.random() - 0.5) * 3;
+    const xPosition = lastPipe ? lastPipe.pipes[0].position.x + pipeSpacing : camera.position.x + 10;
+
+    const pipe = new Pipe(xPosition, gapHeight, gapYPosition);
+    pipe.pipes.forEach(p => scene.add(p));
+    pipes.push(pipe);
+}
 
 window.addEventListener('keydown', (event) => {
     if (event.code === 'ArrowUp' || event.code === 'Space') {
