@@ -1,4 +1,3 @@
-// src/Pipe.js
 import * as THREE from 'three';
 
 class Pipe {
