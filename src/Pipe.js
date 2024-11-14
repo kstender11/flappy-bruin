@@ -25,7 +25,15 @@ class Pipe {
     }
 
     update(speed) {
-        this.pipes.forEach(pipe => pipe.position.x -= speed);
+        // Translation matrix for the moving left
+        const translationMatrix = new THREE.Matrix4();
+        translationMatrix.makeTranslation(-speed, 0, 0);
+
+        this.pipes.forEach(pipe => {
+            pipe.applyMatrix4(translationMatrix);
+        });
+
+        // Update bounding boxes after translation
         this.boundingBoxTop.setFromObject(this.basePipeTop);
         this.boundingBoxBottom.setFromObject(this.basePipeBottom);
     }

@@ -79,7 +79,7 @@ function checkCollision() {
 
 function spawnInitialPipes() {
     const initialPipeCount = 5; 
-    const pipeSpacing = 5; // distance between each pipe 
+    const pipeSpacing = 5; 
 
     for (let i = 0; i < initialPipeCount; i++) {
         const gapHeight = 2 + Math.random() * 2;
@@ -105,7 +105,6 @@ function animate() {
     bruin.update();
 
     if (bruin.gameStarted) {
-        // Spawn the first pipe immediately, then follow the regular interval
         if (frameCount === 0 || frameCount % pipeSpawnInterval === 0) {
             spawnPipe();
         }
@@ -114,14 +113,16 @@ function animate() {
         pipes = pipes.filter(pipe => {
             const isOnScreen = pipe.pipes[0].position.x > -5;
             if (!isOnScreen) {
-                pipe.pipes.forEach(p => scene.remove(p)); // Remove pipes off-screen to the left
+                pipe.pipes.forEach(p => scene.remove(p));
             }
             return isOnScreen;
         });
 
         checkCollision();
-
-        camera.position.x += (bruin.mesh.position.x + 2 - camera.position.x) * 0.03;
+        const targetX = bruin.mesh.position.x + 2;
+        const cameraMatrix = new THREE.Matrix4();
+        cameraMatrix.makeTranslation((targetX - camera.position.x) * 0.03, 0, 0);
+        camera.applyMatrix4(cameraMatrix);
     } else {
         camera.position.x = bruin.mesh.position.x - 1;
     }
@@ -129,6 +130,5 @@ function animate() {
     renderer.render(scene, camera);
     frameCount++;
 }
-
 
 animate();

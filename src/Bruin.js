@@ -33,10 +33,18 @@ class Bruin {
     update() {
         if (this.gameStarted && !this.gameOver) {
             this.velocity += this.gravity;
-            this.mesh.position.y += this.velocity;
+
+            // Translation matrix for the Y-axis movement
+            const translationMatrix = new THREE.Matrix4();
+            translationMatrix.makeTranslation(0, this.velocity, 0);
+
+            // Translation matrix to the Bruin's mesh
+            this.mesh.applyMatrix4(translationMatrix);
+            
+            // Bounding box after translation
             this.boundingBox.setFromObject(this.mesh);
 
-            //check if the Bruin hits the bottom or the top of the screen
+            // If Bruin hits the bottom or top of the screen
             if (this.mesh.position.y < -5 || this.mesh.position.y > this.topBoundary) {
                 this.gameOver = true;
             }
