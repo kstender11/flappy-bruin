@@ -8,7 +8,7 @@ camera.position.z = 5;
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0xffffff, 1); // Set background to white
+renderer.setClearColor(0xffffff, 1); 
 document.body.appendChild(renderer.domElement);
 
 window.addEventListener('resize', () => {
@@ -25,9 +25,13 @@ let pipeSpawnInterval = 250;
 let frameCount = 0;
 
 function spawnPipe() {
+    const lastPipe = pipes[pipes.length - 1];
+    const pipeSpacing = 5; 
     const gapHeight = 2 + Math.random() * 2;
     const gapYPosition = (Math.random() - 0.5) * 3;
-    const pipe = new Pipe(6, gapHeight, gapYPosition);
+    const xPosition = lastPipe ? lastPipe.pipes[0].position.x + pipeSpacing : camera.position.x + 10;
+
+    const pipe = new Pipe(xPosition, gapHeight, gapYPosition);
     pipe.pipes.forEach(p => scene.add(p));
     pipes.push(pipe);
 }
@@ -73,6 +77,23 @@ function checkCollision() {
     }
 }
 
+function spawnInitialPipes() {
+    const initialPipeCount = 5; 
+    const pipeSpacing = 5; // distance between each pipe 
+
+    for (let i = 0; i < initialPipeCount; i++) {
+        const gapHeight = 2 + Math.random() * 2;
+        const gapYPosition = (Math.random() - 0.5) * 3;
+        const xPosition = camera.position.x + 6 + i * pipeSpacing;
+
+        const pipe = new Pipe(xPosition, gapHeight, gapYPosition);
+        pipe.pipes.forEach(p => scene.add(p));
+        pipes.push(pipe);
+    }
+}
+
+spawnInitialPipes();
+
 function animate() {
     if (bruin.gameOver) {
         displayGameOver();
@@ -84,18 +105,30 @@ function animate() {
     bruin.update();
 
     if (bruin.gameStarted) {
-        if (frameCount % pipeSpawnInterval === 0) {
+        // Spawn the first pipe immediately, then follow the regular interval
+        if (frameCount === 0 || frameCount % pipeSpawnInterval === 0) {
             spawnPipe();
         }
+
         pipes.forEach(pipe => pipe.update(0.03));
-        pipes = pipes.filter(pipe => pipe.pipes[0].position.x > -5);
+        pipes = pipes.filter(pipe => {
+            const isOnScreen = pipe.pipes[0].position.x > -5;
+            if (!isOnScreen) {
+                pipe.pipes.forEach(p => scene.remove(p)); // Remove pipes off-screen to the left
+            }
+            return isOnScreen;
+        });
 
         checkCollision();
-        camera.position.x = bruin.mesh.position.x + 2;
+
+        camera.position.x += (bruin.mesh.position.x + 2 - camera.position.x) * 0.03;
+    } else {
+        camera.position.x = bruin.mesh.position.x - 1;
     }
 
     renderer.render(scene, camera);
     frameCount++;
 }
+
 
 animate();
