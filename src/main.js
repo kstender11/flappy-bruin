@@ -24,6 +24,8 @@ let pipes = [];
 let pipeSpawnInterval = 250;
 let frameCount = 0;
 
+let score = 0;
+
 function spawnPipe() {
     const lastPipe = pipes[pipes.length - 1];
     const pipeSpacing = 5; 
@@ -109,7 +111,16 @@ function animate() {
             spawnPipe();
         }
 
-        pipes.forEach(pipe => pipe.update(0.03));
+        pipes.forEach(pipe => {
+            pipe.update(0.03);
+
+            if (!pipe.passed && bruin.mesh.position.x > pipe.pipes[0].position.x + pipe.pipes[0].geometry.parameters.width / 2) {
+                score++;
+                pipe.passed = true;
+                document.getElementById('score').innerText = `Score: ${score}`;
+            }
+        });
+
         pipes = pipes.filter(pipe => {
             const isOnScreen = pipe.pipes[0].position.x > -5;
             if (!isOnScreen) {
@@ -119,10 +130,8 @@ function animate() {
         });
 
         checkCollision();
-        const targetX = bruin.mesh.position.x + 2;
-        const cameraMatrix = new THREE.Matrix4();
-        cameraMatrix.makeTranslation((targetX - camera.position.x) * 0.03, 0, 0);
-        camera.applyMatrix4(cameraMatrix);
+
+        camera.position.x += (bruin.mesh.position.x + 2 - camera.position.x) * 0.03;
     } else {
         camera.position.x = bruin.mesh.position.x - 1;
     }
