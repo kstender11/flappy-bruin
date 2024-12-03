@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import Bruin from './bruin.js';
-import Pipe from './Pipe.js';
+import Pipe from './pipe.js';
 
 // Set up the scene, camera, and renderer
 const scene = new THREE.Scene();
@@ -30,6 +30,20 @@ textureLoader.load('./src/textures/clouds.jpg', (cloudTexture) => {
     sky.position.set(0, 0, -20);  // Adjust depth as needed to fit your camera view
     scene.add(sky);
 });
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); // Increased intensity
+directionalLight.position.set(10, 10, 10);
+scene.add(directionalLight);
+
+// Add a soft ambient light to brighten shadows
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); // Increased intensity for ambient light
+scene.add(ambientLight);
+
+// Optional: Add a hemisphere light for a soft gradient effect
+const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xaaaaaa, 0.5); // Sky color, ground color, intensity
+scene.add(hemisphereLight); 
+
+ 
 // Set up the Bruin character
 const bruin = new Bruin();
 scene.add(bruin.mesh);
@@ -254,16 +268,16 @@ function animate() {
             pipe.update(0.03);
 
             // Update score if Bruin passes a pipe
-            if (!pipe.passed && bruin.mesh.position.x > pipe.pipes[0].position.x + pipe.pipes[0].geometry.parameters.width / 2) {
-                score++;
-                pipe.passed = true;
-                updateScoreDisplay(score); // Update score display with pulse effect
+            if (!pipe.passed && bruin.mesh.position.x > pipe.basePipeTop.position.x) {
+                score++; // Increment score
+                pipe.passed = true; // Mark pipe as passed
+                updateScoreDisplay(score); // Update the score display
             }
         });
 
         // Remove pipes that have moved off-screen
         pipes = pipes.filter(pipe => {
-            const isOnScreen = pipe.pipes[0].position.x > -5;
+            const isOnScreen = pipe.basePipeTop.position.x > -5;
             if (!isOnScreen) {
                 pipe.pipes.forEach(p => scene.remove(p));
             }
@@ -272,7 +286,7 @@ function animate() {
 
         checkCollision();
 
-        // Camera follows Bruin smoothly
+        // Smoothly follow the Bruin character with the camera
         camera.position.x += (bruin.mesh.position.x + 2 - camera.position.x) * 0.03;
     } else {
         camera.position.x = bruin.mesh.position.x - 1;
@@ -281,6 +295,7 @@ function animate() {
     renderer.render(scene, camera);
     frameCount++;
 }
+
 
 // Start the animation loop
 animate();
