@@ -1,15 +1,18 @@
 import * as THREE from 'three';
 import Bruin from './bruin.js';
 import Pipe from './pipe.js';
+import Cloud from './cloud.js';
 
 // Set up the scene, camera, and renderer
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 5;
-
 const renderer = new THREE.WebGLRenderer();
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+
+scene.background = new THREE.Color(0x87CEEB); 
 
 window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -22,39 +25,37 @@ textureLoader.load('./src/textures/clouds.jpg', (cloudTexture) => {
     const skyGeometry = new THREE.PlaneGeometry(100, 60);
     const skyMaterial = new THREE.MeshBasicMaterial({
         map: cloudTexture,
-        side: THREE.DoubleSide // Ensures the texture is visible from both sides
+        side: THREE.DoubleSide 
     });
     const sky = new THREE.Mesh(skyGeometry, skyMaterial);
     
-    // Position the sky far back in the scene
-    sky.position.set(0, 0, -20);  // Adjust depth as needed to fit your camera view
+
+    sky.position.set(0, 0, -20); 
     scene.add(sky);
 });
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); // Increased intensity
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); 
 directionalLight.position.set(10, 10, 10);
 scene.add(directionalLight);
 
-// Add a soft ambient light to brighten shadows
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); // Increased intensity for ambient light
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); 
 scene.add(ambientLight);
 
-// Optional: Add a hemisphere light for a soft gradient effect
-const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xaaaaaa, 0.5); // Sky color, ground color, intensity
+const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xaaaaaa, 0.5); 
 scene.add(hemisphereLight); 
 
  
-// Set up the Bruin character
 const bruin = new Bruin();
 scene.add(bruin.mesh);
 
-// Array to store pipes and other variables
+
 let pipes = [];
 let pipeSpawnInterval = 250;
 let frameCount = 0;
 let score = 0;
 
-// Create the score display if it doesn't already exist
+
 let scoreDisplay = document.getElementById('score');
 if (!scoreDisplay) {
     scoreDisplay = document.createElement('div');
@@ -155,7 +156,7 @@ function displayGameOver() {
     gameOverContainer.appendChild(gameOverText);
     document.body.appendChild(gameOverContainer);
 
-    // Create the Restart button
+    // Create the restart button
     const restartButton = document.createElement('button');
     restartButton.id = 'restartButton';
     restartButton.innerText = 'Restart';
@@ -166,7 +167,6 @@ function displayGameOver() {
         window.location.reload(); // Reload the page to restart the game
     });
 
-    // CSS for the Game Over message, Restart button, and container
     const style = document.createElement('style');
     style.textContent = `
     /* Centering container */
@@ -245,10 +245,47 @@ function spawnInitialPipes() {
     }
 }
 
-// Start by spawning initial pipes
 spawnInitialPipes();
 
-// Main game loop
+let clouds = [];
+const cloudCount = 50; 
+const xStart = camera.position.x - 20; 
+const xEnd = camera.position.x + 40; 
+const yStart = -10; 
+const yEnd = 10; 
+const zStart = -15; 
+const zEnd = -5; 
+const cloudSpacing = 6; 
+
+function generateRandomPosition(existingClouds) {
+    let x, y, z;
+    let isOverlapping;
+    do {
+        x = Math.random() * (xEnd - xStart) + xStart; 
+        y = Math.random() * (yEnd - yStart) + yStart;
+        z = Math.random() * (zEnd - zStart) + zStart;
+
+ 
+        isOverlapping = existingClouds.some(cloud => {
+            const dx = cloud.mesh.position.x - x;
+            const dy = cloud.mesh.position.y - y;
+            const dz = cloud.mesh.position.z - z;
+            return Math.sqrt(dx * dx + dy * dy + dz * dz) < cloudSpacing;
+        });
+    } while (isOverlapping);
+
+    return { x, y, z };
+} 
+
+
+for (let i = 0; i < cloudCount; i++) {
+    const { x, y, z } = generateRandomPosition(clouds);
+    const cloud = new Cloud(x, y, z);
+    scene.add(cloud.mesh);
+    clouds.push(cloud);
+}
+
+
 function animate() {
     if (bruin.gameOver) {
         displayGameOver();
@@ -267,17 +304,23 @@ function animate() {
         pipes.forEach(pipe => {
             pipe.update(0.03);
 
-            // Update score if Bruin passes a pipe
             if (!pipe.passed && bruin.mesh.position.x > pipe.basePipeTop.position.x) {
-                score++; // Increment score
-                pipe.passed = true; // Mark pipe as passed
-                updateScoreDisplay(score); // Update the score display
+                score++;
+                pipe.passed = true;
+                updateScoreDisplay(score);
+            } 
+        });
+
+        clouds.forEach(cloud => {
+            cloud.mesh.position.x -= 0.02; 
+
+            if (cloud.mesh.position.x < camera.position.x - 30) {
+                repositionCloud(cloud);
             }
         });
 
-        // Remove pipes that have moved off-screen
         pipes = pipes.filter(pipe => {
-            const isOnScreen = pipe.basePipeTop.position.x > -5;
+            const isOnScreen = pipe.pipes[0].position.x > -5;
             if (!isOnScreen) {
                 pipe.pipes.forEach(p => scene.remove(p));
             }
@@ -286,7 +329,6 @@ function animate() {
 
         checkCollision();
 
-        // Smoothly follow the Bruin character with the camera
         camera.position.x += (bruin.mesh.position.x + 2 - camera.position.x) * 0.03;
     } else {
         camera.position.x = bruin.mesh.position.x - 1;
@@ -294,6 +336,13 @@ function animate() {
 
     renderer.render(scene, camera);
     frameCount++;
+}
+
+
+function repositionCloud(cloud) {
+    cloud.mesh.position.x = camera.position.x + 30; 
+    cloud.mesh.position.y = Math.random() * (yEnd - yStart) + yStart; 
+    cloud.mesh.position.z = Math.random() * (zEnd - zStart) + zStart; 
 }
 
 
