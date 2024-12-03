@@ -155,61 +155,52 @@ function displayGameOver() {
     // CSS for the Game Over message, Restart button, and container
     const style = document.createElement('style');
     style.textContent = `
-        /* Keyframe animation for Game Over fade-in effect */
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: scale(0.8); }
-            100% { opacity: 1; transform: scale(1); }
-        }
+    /* Centering container */
+    #gameOverContainer {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+        z-index: 10;
+    }
 
-        /* Centering container */
-        #gameOverContainer {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.5); /* Optional semi-transparent background */
-            z-index: 10;
-        }
+    /* Style for the Game Over message */
+    #gameOver {
+        color: #FFCC00; /* Gold color */
+        font-size: 3em;
+        font-family: 'Arial', sans-serif;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Add text shadow for visibility */
+    }
 
-        /* Style for the Game Over message */
-        #gameOver {
-            background: linear-gradient(135deg, #990000, #FFCC00); /* USC Cardinal Red to Gold */
-            color: #ffffff;
-            padding: 20px 40px;
-            border-radius: 12px;
-            font-size: 2.5em;
-            font-family: 'Arial', sans-serif;
-            font-weight: bold;
-            text-align: center;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-            opacity: 0;
-            animation: fadeIn 0.5s ease forwards;
-            margin-bottom: 20px;
-        }
+    /* Style for the Restart button */
+    #restartButton {
+        background: linear-gradient(135deg, #FFCC00, #990000); /* Gold to Cardinal Red */
+        color: #ffffff;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.5em;
+        font-family: 'Arial', sans-serif;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.3s ease, transform 0.2s;
+    }
 
-        /* Style for the Restart button */
-        #restartButton {
-            background: linear-gradient(135deg, #FFCC00, #990000); /* Gold to USC Cardinal Red */
-            color: #ffffff;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.5em;
-            font-family: 'Arial', sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
+    #restartButton:hover {
+        background: linear-gradient(135deg, #990000, #FFCC00); /* Reverse the gradient */
+        transform: scale(1.05); /* Slightly enlarge on hover */
+    }
+`;
 
-        #restartButton:hover {
-            background: linear-gradient(135deg, #990000, #FFCC00); /* Hover effect */
-        }
-    `;
     document.head.appendChild(style);
 }
 
