@@ -6,21 +6,45 @@ class Bruin {
         this.gravity = -0.006;
         this.velocity = 0;
         this.gameStarted = false;
-        this.mesh = new THREE.Mesh(
-            new THREE.SphereGeometry(0.3, 32, 32),
-            new THREE.MeshBasicMaterial({ color: 0x8b4513 }) 
-        );
-        this.mesh.position.y = 0; //start in middle of screen
 
-        this.boundingBox = new THREE.Box3().setFromObject(this.mesh);
+        // Sphere for collision detection
+        this.collisionSphere = new THREE.Mesh(
+            new THREE.SphereGeometry(0.3, 32, 32),
+            new THREE.MeshBasicMaterial({ visible: false }) 
+        );
+
+        // Plane for the bear image
+        const textureLoader = new THREE.TextureLoader();
+        const bearTexture = textureLoader.load('./src/textures/bear_face.png');
+        this.bearMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.6, 0.6), 
+            new THREE.MeshBasicMaterial({
+                map: bearTexture,
+                transparent: true,
+            })
+        );
+
+
+        this.bearMesh.position.set(0, 0, 0.01);
+
+
+        this.mesh = new THREE.Group();
+        this.mesh.add(this.collisionSphere);
+        this.mesh.add(this.bearMesh);
+
+
+        this.mesh.position.y = 0;
+
+
+        this.boundingBox = new THREE.Box3().setFromObject(this.collisionSphere);
         this.gameOver = false;
-        this.topBoundary = 5; 
+        this.topBoundary = 5;
     }
 
     startGame() {
         if (!this.gameStarted) {
             this.gameStarted = true;
-            this.jump(); //jump to start the game
+            this.jump(); 
         }
     }
 
@@ -34,17 +58,17 @@ class Bruin {
         if (this.gameStarted && !this.gameOver) {
             this.velocity += this.gravity;
 
-            // Translation matrix for the Y-axis movement
+            // Translation matrix for Y-axis movement
             const translationMatrix = new THREE.Matrix4();
             translationMatrix.makeTranslation(0, this.velocity, 0);
 
-            // Translation matrix to the Bruin's mesh
+            // Apply the translation to the mesh
             this.mesh.applyMatrix4(translationMatrix);
-            
-            // Bounding box after translation
-            this.boundingBox.setFromObject(this.mesh);
 
-            // If Bruin hits the bottom or top of the screen
+            // Update bounding box based on the collision sphere
+            this.boundingBox.setFromObject(this.collisionSphere);
+
+            // Check for top and bottom boundaries
             if (this.mesh.position.y < -5 || this.mesh.position.y > this.topBoundary) {
                 this.gameOver = true;
             }

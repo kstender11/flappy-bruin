@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import Bruin from './Bruin.js';
+import Bruin from './bruin.js';
 import Pipe from './Pipe.js';
 
 // Set up the scene, camera, and renderer
