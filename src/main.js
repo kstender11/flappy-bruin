@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import Bruin from './bruin.js';
-import Pipe from './pipe.js';
+import Pipe from './Pipe.js';
 import Cloud from './cloud.js';
 import PowerUp from './PowerUp.js';
 
@@ -240,19 +240,38 @@ function displayGameOver() {
 // Check for collisions between Bruin and pipes
 function checkCollision() {
     for (let pipe of pipes) {
-        if (bruin.boundingBox.intersectsBox(pipe.boundingBoxTop) || bruin.boundingBox.intersectsBox(pipe.boundingBoxBottom)) {
-            lives--; // Reduce lives by 1
-            livesDisplay.innerText = `Lives: ${lives}`; // Update lives display
+        if (bruin.neutralizerActive) {
+            // Change pipe color to blue when neutralizer is active
+            pipe.basePipeTop.material.color.setHex(0x0000ff);
+            pipe.basePipeBottom.material.color.setHex(0x0000ff);
+            
+            // Decrement neutralizer pipe count
+            if (bruin.neutralizerPipeCount > 0) {
+                bruin.neutralizerPipeCount--;
+            }
+            
+            // Deactivate neutralizer when 5 pipes have passed
+            if (bruin.neutralizerPipeCount <= 0) {
+                bruin.neutralizerActive = false;
+                // Restore original pipe color
+                pipe.basePipeTop.material.color.setHex(0x8b0000);
+                pipe.basePipeBottom.material.color.setHex(0x8b0000);
+            }
+            continue; // Skip collision detection
+        }
 
-            // Remove the pipe that was hit
+        if (bruin.boundingBox.intersectsBox(pipe.boundingBoxTop) || bruin.boundingBox.intersectsBox(pipe.boundingBoxBottom)) {
+            lives--;
+            livesDisplay.innerText = `Lives: ${lives}`;
+
             pipe.pipes.forEach(p => scene.remove(p));
-            pipes = pipes.filter(p => p !== pipe); // Remove pipe from the array
+            pipes = pipes.filter(p => p !== pipe);
 
             if (lives <= 0) {
-                bruin.gameOver = true; // Set game over if no lives left
-                displayGameOver(); // Call game over display
+                bruin.gameOver = true;
+                displayGameOver();
             }
-            break; // Exit loop after collision
+            break;
         }
     }
 }
@@ -318,59 +337,60 @@ let powerUps = [];
 
 // Function to spawn a power-up at a random position
 function spawnPowerUp() {
-    if (pipes.length < 2) return; // Ensure there are at least two pipes
+    if (pipes.length < 2) return;
 
     const lastPipe = pipes[pipes.length - 1];
     const secondLastPipe = pipes[pipes.length - 2];
 
-    // Calculate the middle position between the last two pipes
     const xPosition = (lastPipe.pipes[0].position.x + secondLastPipe.pipes[0].position.x) / 2;
-    const gapHeight = 2 + Math.random() * 2; // Random height for the gap
-    const gapYPosition = (Math.random() - 0.5) * 3; // Random Y position within a range
+    const gapHeight = 2 + Math.random() * 2;
+    const gapYPosition = (Math.random() - 0.5) * 3;
 
     const randomPosition = {
-        x: xPosition, // Use the calculated x position
-        y: gapYPosition // Use the random Y position
+        x: xPosition,
+        y: gapYPosition
     };
 
-    const randomType = ['shield', 'extraPoints', 'bomb'][Math.floor(Math.random() * 3)]; // Randomly select a type
+    const powerUpTypes = ['shield', 'extraPoints', 'bomb', 'neutralizer'];
+    const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
 
-    const newPowerUp = new PowerUp(randomType, randomPosition); // Create a new power-up instance
-    newPowerUp.mesh = createPowerUpMesh(randomType); // Create the mesh for the power-up
-    newPowerUp.mesh.position.set(randomPosition.x, randomPosition.y, 0); // Set the position of the mesh
-    scene.add(newPowerUp.mesh); // Add the mesh to the scene
-    powerUps.push(newPowerUp); // Add the new power-up to the array
+    const newPowerUp = new PowerUp(randomType, randomPosition);
+    newPowerUp.mesh = createPowerUpMesh(randomType);
+    newPowerUp.mesh.position.set(randomPosition.x, randomPosition.y, 0);
+    scene.add(newPowerUp.mesh);
+    powerUps.push(newPowerUp);
 }
+
 
 // Function to update and render power-ups
 function updatePowerUps() {
     powerUps.forEach((powerUp, index) => {
-        // Move the power-up to the left
-        powerUp.mesh.position.x -= 0.03; // Adjust speed as needed
-
-        // Update the bounding box for the power-up
+        powerUp.mesh.position.x -= 0.03;
         powerUp.boundingBox = new THREE.Box3().setFromObject(powerUp.mesh);
 
-        // Check if the player collects the power-up
         if (bruin.boundingBox.intersectsBox(powerUp.boundingBox)) {
-            if(powerUp.type === "extraPoints") {
-                score += 50;
+            switch(powerUp.type) {
+                case "extraPoints":
+                    score += 50;
+                    break;
+                case "bomb":
+                    bruin.gameOver = true;
+                    break;
+                case "neutralizer":
+                    bruin.neutralizerActive = true;
+                    bruin.neutralizerPipeCount = 5;
+                    break;
             }
-            if(powerUp.type === "bomb") {
-                bruin.gameOver = true;
-            }
-
             
-            scene.remove(powerUp.mesh); // Remove the power-up mesh from the scene
-            powerUps.splice(index, 1); // Remove the power-up from the array after activation
+            scene.remove(powerUp.mesh);
+            powerUps.splice(index, 1);
         }
     });
 
-    // Remove off-screen power-ups
     powerUps = powerUps.filter(powerUp => {
-        const isOnScreen = powerUp.mesh.position.x > -5; // Adjust based on your scene
+        const isOnScreen = powerUp.mesh.position.x > -5;
         if (!isOnScreen) {
-            scene.remove(powerUp.mesh); // Remove the mesh from the scene
+            scene.remove(powerUp.mesh);
         }
         return isOnScreen;
     });
@@ -384,12 +404,10 @@ function startPowerUpSpawning() {
 // Call the function to start spawning power-ups
 startPowerUpSpawning(); // Ensure this is called after defining the function
 
-// Function to create a power-up mesh
 function createPowerUpMesh(type) {
-    const geometry = new THREE.SphereGeometry(0.5, 32, 32); // Create a sphere geometry
+    const geometry = new THREE.SphereGeometry(0.5, 32, 32);
     let color;
 
-    // Assign colors based on the power-up type
     switch (type) {
         case 'shield':
             color = 0x00ff00; // Green for shield
@@ -400,17 +418,20 @@ function createPowerUpMesh(type) {
         case 'bomb':
             color = 0xff0000; // Red for bomb
             break;
+        case 'neutralizer':
+            color = 0x0000ff; // Blue for neutralizer
+            break;
         default:
             color = 0xffffff; // Default to white
     }
 
     const material = new THREE.MeshStandardMaterial({ 
         color: color, 
-        emissive: color, // Slightly glow
-        emissiveIntensity: 0.1 // Adjust intensity as needed
-    }); // Create a material with the assigned color
-    const mesh = new THREE.Mesh(geometry, material); // Create the mesh
-    return mesh; // Return the mesh
+        emissive: color,
+        emissiveIntensity: 0.1
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    return mesh;
 }
 
 let lives = 3; // Initialize lives

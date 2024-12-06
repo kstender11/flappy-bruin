@@ -7,6 +7,9 @@ class Bruin {
         this.velocity = 0;
         this.gameStarted = false;
 
+        this.neutralizerActive = false;
+        this.neutralizerPipeCount = 0;
+
         // Sphere for collision detection
         this.collisionSphere = new THREE.Mesh(
             new THREE.SphereGeometry(0.3, 32, 32),
