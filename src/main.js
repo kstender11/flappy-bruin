@@ -13,7 +13,7 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-scene.background = new THREE.Color(0x000000); 
+scene.background = new THREE.Color(0x000000);
 
 window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -26,12 +26,12 @@ textureLoader.load('./src/textures/clouds.jpg', (cloudTexture) => {
     const skyGeometry = new THREE.PlaneGeometry(100, 60);
     const skyMaterial = new THREE.MeshBasicMaterial({
         map: cloudTexture,
-        side: THREE.DoubleSide 
+        side: THREE.DoubleSide
     });
     const sky = new THREE.Mesh(skyGeometry, skyMaterial);
-    
 
-    sky.position.set(0, 0, -20); 
+
+    sky.position.set(0, 0, -20);
     scene.add(sky);
 });
 
@@ -46,7 +46,7 @@ textureLoader.load('./src/textures/clouds.jpg', (cloudTexture) => {
 // const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xaaaaaa, 0.5); 
 // scene.add(hemisphereLight); 
 
- 
+
 const bruin = new Bruin();
 scene.add(bruin.mesh);
 
@@ -166,11 +166,11 @@ function checkBounds() {
 function displayGameOver() {
     const gameOverContainer = document.createElement('div');
     gameOverContainer.id = 'gameOverContainer';
-    
+
     const gameOverText = document.createElement('div');
     gameOverText.id = 'gameOver';
     gameOverText.innerText = 'Game Over';
-    
+
     gameOverContainer.appendChild(gameOverText);
     document.body.appendChild(gameOverContainer);
 
@@ -237,7 +237,6 @@ function displayGameOver() {
 }
 
 
-// Check for collisions between Bruin and pipes
 function checkCollision() {
     for (let pipe of pipes) {
         if (bruin.neutralizerActive) {
@@ -260,9 +259,10 @@ function checkCollision() {
             continue; // Skip collision detection
         }
 
-        if (bruin.boundingBox.intersectsBox(pipe.boundingBoxTop) || bruin.boundingBox.intersectsBox(pipe.boundingBoxBottom)) {
+        else if (bruin.boundingBox.intersectsBox(pipe.boundingBoxTop) || bruin.boundingBox.intersectsBox(pipe.boundingBoxBottom)) {
+            pipe.basePipeTop.material.color.setHex(0x8b0000);
+            pipe.basePipeBottom.material.color.setHex(0x8b0000);
             lives--;
-            livesDisplay.innerText = `Lives: ${lives}`;
 
             pipe.pipes.forEach(p => scene.remove(p));
             pipes = pipes.filter(p => p !== pipe);
@@ -295,24 +295,24 @@ function spawnInitialPipes() {
 spawnInitialPipes();
 
 let clouds = [];
-const cloudCount = 50; 
-const xStart = camera.position.x - 20; 
-const xEnd = camera.position.x + 40; 
-const yStart = -10; 
-const yEnd = 10; 
-const zStart = -15; 
-const zEnd = -5; 
-const cloudSpacing = 6; 
+const cloudCount = 50;
+const xStart = camera.position.x - 20;
+const xEnd = camera.position.x + 40;
+const yStart = -10;
+const yEnd = 10;
+const zStart = -15;
+const zEnd = -5;
+const cloudSpacing = 6;
 
 function generateRandomPosition(existingClouds) {
     let x, y, z;
     let isOverlapping;
     do {
-        x = Math.random() * (xEnd - xStart) + xStart; 
+        x = Math.random() * (xEnd - xStart) + xStart;
         y = Math.random() * (yEnd - yStart) + yStart;
         z = Math.random() * (zEnd - zStart) + zStart;
 
- 
+
         isOverlapping = existingClouds.some(cloud => {
             const dx = cloud.mesh.position.x - x;
             const dy = cloud.mesh.position.y - y;
@@ -322,7 +322,7 @@ function generateRandomPosition(existingClouds) {
     } while (isOverlapping);
 
     return { x, y, z };
-} 
+}
 
 
 for (let i = 0; i < cloudCount; i++) {
@@ -351,7 +351,7 @@ function spawnPowerUp() {
         y: gapYPosition
     };
 
-    const powerUpTypes = ['shield', 'extraPoints', 'bomb', 'neutralizer'];
+    const powerUpTypes = ['life', 'extraPoints', 'bomb', 'neutralizer'];
     const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
 
     const newPowerUp = new PowerUp(randomType, randomPosition);
@@ -369,21 +369,24 @@ function updatePowerUps() {
         powerUp.boundingBox = new THREE.Box3().setFromObject(powerUp.mesh);
 
         if (bruin.boundingBox.intersectsBox(powerUp.boundingBox)) {
-            switch(powerUp.type) {
-                case "extraPoints":
-                    score += 50;
-                    break;
-                case "bomb":
-                    bruin.gameOver = true;
-                    break;
-                case "neutralizer":
-                    bruin.neutralizerActive = true;
-                    bruin.neutralizerPipeCount = 5;
-                    break;
+            if (powerUp.type === "extraPoints") {
+                score += 20;
             }
-            
-            scene.remove(powerUp.mesh);
-            powerUps.splice(index, 1);
+            if (powerUp.type === "bomb") {
+                bruin.gameOver = true;
+            }
+
+            if (powerUp.type === "life") {
+                if (lives < 3) {
+                    lives += 1;
+
+                }
+            }
+            powerUp.activate(bruin);
+
+
+            scene.remove(powerUp.mesh); // Remove the power-up mesh from the scene
+            powerUps.splice(index, 1); // Remove the power-up from the array after activation
         }
     });
 
@@ -396,42 +399,46 @@ function updatePowerUps() {
     });
 }
 
-// Function to start spawning power-ups at intervals
 function startPowerUpSpawning() {
-    setInterval(spawnPowerUp, 3000); // Spawn a new power-up every 5 seconds
+    setInterval(spawnPowerUp, 3000);
 }
 
-// Call the function to start spawning power-ups
-startPowerUpSpawning(); // Ensure this is called after defining the function
 
 function createPowerUpMesh(type) {
-    const geometry = new THREE.SphereGeometry(0.5, 32, 32);
     let color;
+    let path;
 
     switch (type) {
-        case 'shield':
-            color = 0x00ff00; // Green for shield
+        case 'life':
+            path =  './src/textures/heart_texture.jpg'; // Green for shield
             break;
         case 'extraPoints':
-            color = 0xffff00; // Yellow for extra points
+            path =  './src/textures/star_texture.jpg'; // Yellow for extra points
             break;
         case 'bomb':
-            color = 0xff0000; // Red for bomb
+            path =  './src/textures/bomb_texture.jpg'; // Red for bomb
             break;
         case 'neutralizer':
-            color = 0x0000ff; // Blue for neutralizer
+            path = './src/textures/ucla_texture.jpg'; // Blue for neutralizer
             break;
         default:
-            color = 0xffffff; // Default to white
+            path =  './src/textures/heart_texture.jpg'; // Default to white
     }
 
-    const material = new THREE.MeshStandardMaterial({ 
-        color: color, 
-        emissive: color,
-        emissiveIntensity: 0.1
-    });
-    const mesh = new THREE.Mesh(geometry, material);
-    return mesh;
+   
+     // Load the texture and create the mesh
+     const geometry = new THREE.SphereGeometry(0.5, 32, 32); // Adjust geometry if needed
+     const material = new THREE.MeshBasicMaterial();
+ 
+     // Load the texture asynchronously
+     textureLoader.load(path, (texture) => {
+         material.map = texture; // Assign the loaded texture
+         material.needsUpdate = true; // Ensure material updates
+     });
+ 
+     const mesh = new THREE.Mesh(geometry, material);
+     mesh.rotation.y = 1.5;// Create the mesh with geometry and material
+     return mesh;
 }
 
 let lives = 3; // Initialize lives
@@ -455,16 +462,27 @@ livesStyle.textContent = `
 `;
 document.head.appendChild(livesStyle);
 
+let flag = true;
+
 // Update the animate function to include power-up updates
 function animate() {
+
+    livesDisplay.innerText = `Lives: ${lives}`;
+
     if (bruin.gameOver) {
         displayGameOver();
         return;
     }
 
+    if (bruin.gameStarted && flag) {
+        startPowerUpSpawning();
+        flag = false;
+    }
+
     requestAnimationFrame(animate);
 
     bruin.update();
+    livesDisplay.innerText = `Lives: ${lives}`;
     checkBounds();
     checkCollision();
     updatePowerUps(); // Update power-ups each frame
@@ -481,17 +499,19 @@ function animate() {
                 score++;
                 pipe.passed = true;
                 updateScoreDisplay(score);
-            } 
+            }
         });
 
         clouds.forEach(cloud => {
-            cloud.mesh.position.x -= 0.02; 
+            cloud.mesh.position.x -= 0.02;
 
             if (cloud.mesh.position.x < camera.position.x - 30) {
                 repositionCloud(cloud);
             }
         });
 
+        // console.log("Pipe Length " + pipes.length)
+        // console.log(bruin.neutralizerActive)
         pipes = pipes.filter(pipe => {
             const isOnScreen = pipe.pipes[0].position.x > -5;
             if (!isOnScreen) {
@@ -511,11 +531,10 @@ function animate() {
 
 
 function repositionCloud(cloud) {
-    cloud.mesh.position.x = camera.position.x + 30; 
-    cloud.mesh.position.y = Math.random() * (yEnd - yStart) + yStart; 
-    cloud.mesh.position.z = Math.random() * (zEnd - zStart) + zStart; 
+    cloud.mesh.position.x = camera.position.x + 30;
+    cloud.mesh.position.y = Math.random() * (yEnd - yStart) + yStart;
+    cloud.mesh.position.z = Math.random() * (zEnd - zStart) + zStart;
 }
 
 
-// Start the animation loop
 animate();

@@ -12,14 +12,11 @@ class PowerUp {
         );
     }
 
-    // Method to activate the power-up
     activate(player) {
         switch (this.type) {
-            case 'shield':
-                this.activateShield(player);
+            case 'life':
                 break;
             case 'extraPoints':
-                this.activateExtraPoints(player);
                 break;
             case 'bomb':
                 break;
@@ -46,15 +43,12 @@ class PowerUp {
 
     // Neutralizer power-up: Prevents collision with next 5 pipes
     activateNeutralizer(player) {
+        console.log("Got here!")
         player.neutralizerActive = true;
-        player.neutralizerPipeCount = 5;
-        setTimeout(() => {
-            player.neutralizerActive = false;
-            player.neutralizerPipeCount = 0;
-        }, this.duration);
+        player.neutralizerPipeCount = 6;
+      
     }
 
-    // Check if the power-up is near a pipe
     isNear(pipe) {
         const distance = Math.sqrt(
             (this.position.x - pipe.position.x) ** 2 +
