@@ -51,7 +51,7 @@ const bruin = new Bruin();
 scene.add(bruin.mesh);
 
 
-const bruinLight = new THREE.PointLight(0xffffff, 10, 50); // White light, intensity, distance
+const bruinLight = new THREE.PointLight(0xffffff, 8, 50); // White light, intensity, distance
 bruinLight.position.copy(bruin.mesh.position); // Set initial position to Bruin's position
 scene.add(bruinLight);
 
@@ -129,7 +129,7 @@ function spawnPipe() {
 
     const pipe = new Pipe(xPosition, gapHeight, gapYPosition);
     pipe.pipes.forEach(p => scene.add(p));
-    if (Math.random() < 0.75) {
+    if (Math.random() < 0.50) {
         spawnPowerUp();
     }
 
@@ -508,7 +508,7 @@ function animate() {
         const elapsedTime = currentTime - bounceStartTime;
         const BOUNCE_DISTANCE = speed * 2;
         
-        if (elapsedTime < 100) {
+        if (elapsedTime < 300) {
             // Move everything to the right during bounce
             pipe_arr.forEach(pipe => {
                 pipe.pipes.forEach(p => {

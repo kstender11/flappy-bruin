@@ -43,7 +43,7 @@ class PowerUp {
 
     activateNeutralizer(player) {
         player.neutralizerActive = true;
-        player.neutralizerPipeCount = 6; // Reset the pipe count
+        player.neutralizerPipeCount = 9; // Reset the pipe count
         setTimeout(() => {
             if (player.neutralizerActive) {
                 player.neutralizerActive = false;
@@ -55,7 +55,7 @@ class PowerUp {
                 });
                 console.log('Neutralizer deactivated after 6 seconds.');
             }
-        }, 6000); // 6 seconds
+        }, 9000); // 6 seconds
     }
     
     
