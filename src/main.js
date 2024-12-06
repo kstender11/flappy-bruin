@@ -51,7 +51,7 @@ const bruin = new Bruin();
 scene.add(bruin.mesh);
 
 
-const bruinLight = new THREE.PointLight(0xffffff, 8, 50); // White light, intensity, distance
+const bruinLight = new THREE.PointLight(0xffffff, 10, 50); // White light, intensity, distance
 bruinLight.position.copy(bruin.mesh.position); // Set initial position to Bruin's position
 scene.add(bruinLight);
 
@@ -245,33 +245,33 @@ function displayGameOver() {
 
 function checkCollision() {
     if (bruin.neutralizerActive) {
-        pipe_arr.forEach((pipe, index) => {
-            if (bruin.neutralizerPipeCount > 0 && !pipe.neutralized) {
-                pipe.basePipeTop.material.color.setHex(0x0000ff); 
-                pipe.basePipeBottom.material.color.setHex(0x0000ff); 
-                pipe.neutralized = true; 
-                bruin.neutralizerPipeCount--; 
+        pipe_arr.forEach((pipe) => {
+            if (!pipe.neutralized) {
+                pipe.basePipeTop.material.color.setHex(0x0000ff); // Set blue color for neutralized pipes
+                pipe.basePipeBottom.material.color.setHex(0x0000ff);
+                pipe.neutralized = true; // Mark the pipe as neutralized
             }
         });
 
-        // Deactivate neutralizer if all pipes have been handled
-        if (bruin.neutralizerPipeCount <= 0) {
-            bruin.neutralizerActive = false;
-            pipe_arr.forEach(pipe => {
-                if (pipe.neutralized) {
-                    pipe.resetColor(); 
-                    pipe.neutralized = false; 
-                }
-            });
-        }
-        return; 
+        // Skip collision logic during neutralizer effect
+        return;
     }
 
     // Regular collision detection
     for (let pipe of pipe_arr) {
-        if (bruin.boundingBox.intersectsBox(pipe.boundingBoxTop) || bruin.boundingBox.intersectsBox(pipe.boundingBoxBottom)) {
-            pipe.basePipeTop.material.color.setHex(0x8b0000); 
-            pipe.basePipeBottom.material.color.setHex(0x8b0000); 
+        if (
+            bruin.boundingBox.intersectsBox(pipe.boundingBoxTop) ||
+            bruin.boundingBox.intersectsBox(pipe.boundingBoxBottom)
+        ) {
+            // Check if pipe is neutralized (blue)
+            if (pipe.neutralized) {
+                console.log("Hit a neutralized pipe. No penalty.");
+                continue; // Skip penalty for hitting a blue pipe
+            }
+
+            // Regular penalty for hitting non-neutralized pipes
+            pipe.basePipeTop.material.color.setHex(0x8b0000); // Change to red
+            pipe.basePipeBottom.material.color.setHex(0x8b0000);
             lives--;
 
             pipe.pipes.forEach(p => scene.remove(p));
@@ -286,6 +286,7 @@ function checkCollision() {
         }
     }
 }
+
 
 // Spawn initial set of pipes
 function spawnInitialPipes() {
