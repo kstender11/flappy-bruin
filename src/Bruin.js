@@ -54,6 +54,12 @@ class Bruin {
         }
     }
 
+    jumpDown() {
+        if(this.gameStarted) {
+            this.velocity = this.jumpStrength * -0.25;
+        }
+    }
+
     update() {
         if (this.gameStarted && !this.gameOver) {
             this.velocity += this.gravity;

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import Bruin from './bruin.js';
 import Pipe from './pipe.js';
 import Cloud from './cloud.js';
+import PowerUp from './PowerUp.js';
 
 // Set up the scene, camera, and renderer
 const scene = new THREE.Scene();
@@ -12,7 +13,7 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-scene.background = new THREE.Color(0x87CEEB); 
+scene.background = new THREE.Color(0x000000); 
 
 window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -34,21 +35,25 @@ textureLoader.load('./src/textures/clouds.jpg', (cloudTexture) => {
     scene.add(sky);
 });
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); 
-directionalLight.position.set(10, 10, 10);
-scene.add(directionalLight);
+// const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); 
+// directionalLight.position.set(10, 10, 10);
+// scene.add(directionalLight);
 
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); 
-scene.add(ambientLight);
+// const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); 
+// scene.add(ambientLight);
 
-const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xaaaaaa, 0.5); 
-scene.add(hemisphereLight); 
+// const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xaaaaaa, 0.5); 
+// scene.add(hemisphereLight); 
 
  
 const bruin = new Bruin();
 scene.add(bruin.mesh);
 
+
+const bruinLight = new THREE.PointLight(0xffffff, 10, 100); // White light, intensity, distance
+bruinLight.position.copy(bruin.mesh.position); // Set initial position to Bruin's position
+scene.add(bruinLight);
 
 let pipes = [];
 let pipeSpawnInterval = 250;
@@ -143,6 +148,19 @@ window.addEventListener('mousedown', (event) => {
     }
 });
 
+function checkBounds() {
+    const topBound = camera.position.y + 3.5; // Adjust based on your scene
+    const bottomBound = camera.position.y - 3.5; // Adjust based on your scene
+
+    if (bruin.mesh.position.y > topBound) {
+        bruin.mesh.position.y = topBound; // Keep it within bounds
+        bruin.jumpDown();// Reverse direction
+    } else if (bruin.mesh.position.y < bottomBound) {
+        bruin.mesh.position.y = bottomBound; // Keep it within bounds
+        bruin.jump() // Reverse direction
+    }
+}
+
 // Display "Game Over" message
 // Display "Game Over" message and show the Restart button
 function displayGameOver() {
@@ -223,8 +241,18 @@ function displayGameOver() {
 function checkCollision() {
     for (let pipe of pipes) {
         if (bruin.boundingBox.intersectsBox(pipe.boundingBoxTop) || bruin.boundingBox.intersectsBox(pipe.boundingBoxBottom)) {
-            bruin.gameOver = true;
-            break;
+            lives--; // Reduce lives by 1
+            livesDisplay.innerText = `Lives: ${lives}`; // Update lives display
+
+            // Remove the pipe that was hit
+            pipe.pipes.forEach(p => scene.remove(p));
+            pipes = pipes.filter(p => p !== pipe); // Remove pipe from the array
+
+            if (lives <= 0) {
+                bruin.gameOver = true; // Set game over if no lives left
+                displayGameOver(); // Call game over display
+            }
+            break; // Exit loop after collision
         }
     }
 }
@@ -285,7 +313,128 @@ for (let i = 0; i < cloudCount; i++) {
     clouds.push(cloud);
 }
 
+// Array to hold active power-ups
+let powerUps = [];
 
+// Function to spawn a power-up at a random position
+function spawnPowerUp() {
+    if (pipes.length < 2) return; // Ensure there are at least two pipes
+
+    const lastPipe = pipes[pipes.length - 1];
+    const secondLastPipe = pipes[pipes.length - 2];
+
+    // Calculate the middle position between the last two pipes
+    const xPosition = (lastPipe.pipes[0].position.x + secondLastPipe.pipes[0].position.x) / 2;
+    const gapHeight = 2 + Math.random() * 2; // Random height for the gap
+    const gapYPosition = (Math.random() - 0.5) * 3; // Random Y position within a range
+
+    const randomPosition = {
+        x: xPosition, // Use the calculated x position
+        y: gapYPosition // Use the random Y position
+    };
+
+    const randomType = ['shield', 'extraPoints', 'bomb'][Math.floor(Math.random() * 3)]; // Randomly select a type
+
+    const newPowerUp = new PowerUp(randomType, randomPosition); // Create a new power-up instance
+    newPowerUp.mesh = createPowerUpMesh(randomType); // Create the mesh for the power-up
+    newPowerUp.mesh.position.set(randomPosition.x, randomPosition.y, 0); // Set the position of the mesh
+    scene.add(newPowerUp.mesh); // Add the mesh to the scene
+    powerUps.push(newPowerUp); // Add the new power-up to the array
+}
+
+// Function to update and render power-ups
+function updatePowerUps() {
+    powerUps.forEach((powerUp, index) => {
+        // Move the power-up to the left
+        powerUp.mesh.position.x -= 0.03; // Adjust speed as needed
+
+        // Update the bounding box for the power-up
+        powerUp.boundingBox = new THREE.Box3().setFromObject(powerUp.mesh);
+
+        // Check if the player collects the power-up
+        if (bruin.boundingBox.intersectsBox(powerUp.boundingBox)) {
+            if(powerUp.type === "extraPoints") {
+                score += 50;
+            }
+            if(powerUp.type === "bomb") {
+                bruin.gameOver = true;
+            }
+
+            
+            scene.remove(powerUp.mesh); // Remove the power-up mesh from the scene
+            powerUps.splice(index, 1); // Remove the power-up from the array after activation
+        }
+    });
+
+    // Remove off-screen power-ups
+    powerUps = powerUps.filter(powerUp => {
+        const isOnScreen = powerUp.mesh.position.x > -5; // Adjust based on your scene
+        if (!isOnScreen) {
+            scene.remove(powerUp.mesh); // Remove the mesh from the scene
+        }
+        return isOnScreen;
+    });
+}
+
+// Function to start spawning power-ups at intervals
+function startPowerUpSpawning() {
+    setInterval(spawnPowerUp, 3000); // Spawn a new power-up every 5 seconds
+}
+
+// Call the function to start spawning power-ups
+startPowerUpSpawning(); // Ensure this is called after defining the function
+
+// Function to create a power-up mesh
+function createPowerUpMesh(type) {
+    const geometry = new THREE.SphereGeometry(0.5, 32, 32); // Create a sphere geometry
+    let color;
+
+    // Assign colors based on the power-up type
+    switch (type) {
+        case 'shield':
+            color = 0x00ff00; // Green for shield
+            break;
+        case 'extraPoints':
+            color = 0xffff00; // Yellow for extra points
+            break;
+        case 'bomb':
+            color = 0xff0000; // Red for bomb
+            break;
+        default:
+            color = 0xffffff; // Default to white
+    }
+
+    const material = new THREE.MeshStandardMaterial({ 
+        color: color, 
+        emissive: color, // Slightly glow
+        emissiveIntensity: 0.1 // Adjust intensity as needed
+    }); // Create a material with the assigned color
+    const mesh = new THREE.Mesh(geometry, material); // Create the mesh
+    return mesh; // Return the mesh
+}
+
+let lives = 3; // Initialize lives
+let livesDisplay = document.createElement('div');
+livesDisplay.id = 'lives';
+livesDisplay.innerText = `Lives: ${lives}`;
+document.body.appendChild(livesDisplay);
+
+// Add CSS styles for the lives display
+const livesStyle = document.createElement('style');
+livesStyle.textContent = `
+    #lives {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: #ffffff;
+        font-size: 1.5em;
+        font-family: 'Arial', sans-serif;
+        font-weight: bold;
+    }
+`;
+document.head.appendChild(livesStyle);
+
+// Update the animate function to include power-up updates
 function animate() {
     if (bruin.gameOver) {
         displayGameOver();
@@ -295,7 +444,10 @@ function animate() {
     requestAnimationFrame(animate);
 
     bruin.update();
-
+    checkBounds();
+    checkCollision();
+    updatePowerUps(); // Update power-ups each frame
+    bruinLight.position.copy(bruin.mesh.position);
     if (bruin.gameStarted) {
         if (frameCount === 0 || frameCount % pipeSpawnInterval === 0) {
             spawnPipe();
@@ -326,8 +478,6 @@ function animate() {
             }
             return isOnScreen;
         });
-
-        checkCollision();
 
         camera.position.x += (bruin.mesh.position.x + 2 - camera.position.x) * 0.03;
     } else {
