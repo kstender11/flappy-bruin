@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import Bruin from './bruin.js';
+import Bruin from './Bruin.js';
 import Pipe from './Pipe.js';
 import Cloud from './cloud.js';
 import PowerUp from './PowerUp.js';
@@ -51,14 +51,15 @@ const bruin = new Bruin();
 scene.add(bruin.mesh);
 
 
-const bruinLight = new THREE.PointLight(0xffffff, 10, 100); 
-bruinLight.position.copy(bruin.mesh.position); 
+const bruinLight = new THREE.PointLight(0xffffff, 3, 50); // White light, intensity, distance
+bruinLight.position.copy(bruin.mesh.position); // Set initial position to Bruin's position
 scene.add(bruinLight);
 
-let pipes = [];
-let pipeSpawnInterval = 250;
+let pipe_arr = [];
+let pipeSpawnInterval = 500;
 let frameCount = 0;
 let score = 0;
+let speed = 0.03;
 
 
 let scoreDisplay = document.getElementById('score');
@@ -118,7 +119,7 @@ function updateScoreDisplay(newScore) {
 
 // Function to spawn pipes at intervals
 function spawnPipe() {
-    const lastPipe = pipes[pipes.length - 1];
+    const lastPipe = pipe_arr[pipe_arr.length - 1];
     const pipeSpacing = 5;
     const gapHeight = 2 + Math.random() * 2;
     const gapYPosition = (Math.random() - 0.5) * 3;
@@ -126,7 +127,11 @@ function spawnPipe() {
 
     const pipe = new Pipe(xPosition, gapHeight, gapYPosition);
     pipe.pipes.forEach(p => scene.add(p));
-    pipes.push(pipe);
+    if (Math.random() < 0.75) {
+        spawnPowerUp();
+    }
+
+    pipe_arr.push(pipe);
 }
 
 // Handle user input for jumping
@@ -238,7 +243,7 @@ function displayGameOver() {
 
 function checkCollision() {
     if (bruin.neutralizerActive) {
-        pipes.forEach((pipe, index) => {
+        pipe_arr.forEach((pipe, index) => {
             if (bruin.neutralizerPipeCount > 0 && !pipe.neutralized) {
                 pipe.basePipeTop.material.color.setHex(0x0000ff); 
                 pipe.basePipeBottom.material.color.setHex(0x0000ff); 
@@ -250,7 +255,7 @@ function checkCollision() {
         // Deactivate neutralizer if all pipes have been handled
         if (bruin.neutralizerPipeCount <= 0) {
             bruin.neutralizerActive = false;
-            pipes.forEach(pipe => {
+            pipe_arr.forEach(pipe => {
                 if (pipe.neutralized) {
                     pipe.resetColor(); 
                     pipe.neutralized = false; 
@@ -261,14 +266,14 @@ function checkCollision() {
     }
 
     // Regular collision detection
-    for (let pipe of pipes) {
+    for (let pipe of pipe_arr) {
         if (bruin.boundingBox.intersectsBox(pipe.boundingBoxTop) || bruin.boundingBox.intersectsBox(pipe.boundingBoxBottom)) {
             pipe.basePipeTop.material.color.setHex(0x8b0000); 
             pipe.basePipeBottom.material.color.setHex(0x8b0000); 
             lives--;
 
             pipe.pipes.forEach(p => scene.remove(p));
-            pipes = pipes.filter(p => p !== pipe);
+            pipe_arr = pipe_arr.filter(p => p !== pipe);
 
             if (lives <= 0) {
                 bruin.gameOver = true;
@@ -291,7 +296,7 @@ function spawnInitialPipes() {
 
         const pipe = new Pipe(xPosition, gapHeight, gapYPosition);
         pipe.pipes.forEach(p => scene.add(p));
-        pipes.push(pipe);
+        pipe_arr.push(pipe);
     }
 }
 
@@ -340,35 +345,49 @@ let powerUps = [];
 
 // Function to spawn a power-up at a random position
 function spawnPowerUp() {
-    if (pipes.length < 2) return;
+    // Ensure there are at least 2 pipes to spawn between
+    if (pipe_arr.length < 2) return;
 
-    const lastPipe = pipes[pipes.length - 1];
-    const secondLastPipe = pipes[pipes.length - 2];
+    // Find the two most recently spawned pipes
+    const lastPipe = pipe_arr[pipe_arr.length - 1];
+    const secondLastPipe = pipe_arr[pipe_arr.length - 2];
 
+    // Calculate the midpoint between these two pipes
     const xPosition = (lastPipe.pipes[0].position.x + secondLastPipe.pipes[0].position.x) / 2;
-    const gapHeight = 2 + Math.random() * 2;
-    const gapYPosition = (Math.random() - 0.5) * 3;
 
-    const randomPosition = {
-        x: xPosition,
-        y: gapYPosition
-    };
+    // Check if a power-up already exists in this section
+    const existingPowerUp = powerUps.some(powerUp => 
+        powerUp.mesh.position.x > secondLastPipe.pipes[0].position.x && 
+        powerUp.mesh.position.x < lastPipe.pipes[0].position.x
+    );
 
-    const powerUpTypes = ['life', 'extraPoints', 'bomb', 'neutralizer'];
-    const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+    // Only spawn if no power-up exists in this pipe section
+    if (!existingPowerUp) {
 
-    const newPowerUp = new PowerUp(randomType, randomPosition);
-    newPowerUp.mesh = createPowerUpMesh(randomType);
-    newPowerUp.mesh.position.set(randomPosition.x, randomPosition.y, 0);
-    scene.add(newPowerUp.mesh);
-    powerUps.push(newPowerUp);
+        const gapYPosition = (Math.random() - 0.5) * 3;
+
+        const randomPosition = {
+            x: xPosition,
+            y: gapYPosition
+        };
+
+        const powerUpTypes = ['life', 'extraPoints', 'bomb', 'neutralizer'];
+        const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+
+        const newPowerUp = new PowerUp(randomType, randomPosition);
+        newPowerUp.mesh = createPowerUpMesh(randomType);
+        newPowerUp.mesh.position.set(randomPosition.x, randomPosition.y, 0);
+        scene.add(newPowerUp.mesh);
+        powerUps.push(newPowerUp);
+    }
 }
+
 
 
 // Function to update and render power-ups
 function updatePowerUps() {
     powerUps.forEach((powerUp, index) => {
-        powerUp.mesh.position.x -= 0.03;
+        powerUp.mesh.position.x -= speed;
         powerUp.boundingBox = new THREE.Box3().setFromObject(powerUp.mesh);
 
         if (bruin.boundingBox.intersectsBox(powerUp.boundingBox)) {
@@ -403,7 +422,7 @@ function updatePowerUps() {
 }
 
 function startPowerUpSpawning() {
-    setInterval(spawnPowerUp, 3000);
+    //setInterval(spawnPowerUp, 2000);
 }
 
 
@@ -482,18 +501,29 @@ function animate() {
     requestAnimationFrame(animate);
 
     bruin.update();
+    const speedLevel = Math.floor(score / 10);
+    
+    let speedMultiplier = 0.03 + (speedLevel * 0.002);
+    
+    speedMultiplier = Math.min(speedMultiplier, 0.08);
+    speedMultiplier = Math.max(0.03, speedMultiplier);
+
+    speed = speedMultiplier;
+
+    console.log(speed)
+
     livesDisplay.innerText = `Lives: ${lives}`;
     checkBounds();
     checkCollision();
     updatePowerUps(); // Update power-ups each frame
     bruinLight.position.copy(bruin.mesh.position);
     if (bruin.gameStarted) {
-        if (frameCount === 0 || frameCount % pipeSpawnInterval === 0) {
+        if (pipe_arr.length < 5) {  // For example, keep at least 5 pipes
             spawnPipe();
         }
 
-        pipes.forEach(pipe => {
-            pipe.update(0.03);
+        pipe_arr.forEach(pipe => {
+            pipe.update(speed);
 
             if (!pipe.passed && bruin.mesh.position.x > pipe.basePipeTop.position.x) {
                 score++;
@@ -503,7 +533,7 @@ function animate() {
         });
 
         clouds.forEach(cloud => {
-            cloud.mesh.position.x -= 0.02;
+            cloud.mesh.position.x -= speed;
 
             if (cloud.mesh.position.x < camera.position.x - 30) {
                 repositionCloud(cloud);
@@ -512,7 +542,9 @@ function animate() {
 
         // console.log("Pipe Length " + pipes.length)
         // console.log(bruin.neutralizerActive)
-        pipes = pipes.filter(pipe => {
+ 
+     
+        pipe_arr = pipe_arr.filter(pipe => {
             const isOnScreen = pipe.pipes[0].position.x > -5;
             if (!isOnScreen) {
                 pipe.pipes.forEach(p => scene.remove(p));
@@ -520,7 +552,7 @@ function animate() {
             return isOnScreen;
         });
 
-        camera.position.x += (bruin.mesh.position.x + 2 - camera.position.x) * 0.03;
+        camera.position.x += (bruin.mesh.position.x + 2 - camera.position.x) * speed;
     } else {
         camera.position.x = bruin.mesh.position.x - 1;
     }
