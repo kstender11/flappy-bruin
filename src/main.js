@@ -51,15 +51,17 @@ const bruin = new Bruin();
 scene.add(bruin.mesh);
 
 
-const bruinLight = new THREE.PointLight(0xffffff, 3, 50); // White light, intensity, distance
+const bruinLight = new THREE.PointLight(0xffffff, 8, 50); // White light, intensity, distance
 bruinLight.position.copy(bruin.mesh.position); // Set initial position to Bruin's position
 scene.add(bruinLight);
 
 let pipe_arr = [];
+let isBouncing = false;
 let pipeSpawnInterval = 500;
 let frameCount = 0;
 let score = 0;
 let speed = 0.03;
+let bounceStartTime = 0;
 
 
 let scoreDisplay = document.getElementById('score');
@@ -274,7 +276,8 @@ function checkCollision() {
 
             pipe.pipes.forEach(p => scene.remove(p));
             pipe_arr = pipe_arr.filter(p => p !== pipe);
-
+            isBouncing = true;
+            bounceStartTime = Date.now();
             if (lives <= 0) {
                 bruin.gameOver = true;
                 displayGameOver();
@@ -483,6 +486,7 @@ livesStyle.textContent = `
 document.head.appendChild(livesStyle);
 
 let flag = true;
+let pipes_passed = 0;
 
 function animate() {
 
@@ -498,12 +502,39 @@ function animate() {
         flag = false;
     }
 
+    if (isBouncing) {
+        const currentTime = Date.now();
+        const elapsedTime = currentTime - bounceStartTime;
+        const BOUNCE_DISTANCE = speed * 2;
+        
+        if (elapsedTime < 100) {
+            // Move everything to the right during bounce
+            pipe_arr.forEach(pipe => {
+                pipe.pipes.forEach(p => {
+                    p.position.x += BOUNCE_DISTANCE;
+                });
+            });
+
+            clouds.forEach(cloud => {
+                cloud.mesh.position.x += BOUNCE_DISTANCE;
+            });
+
+            powerUps.forEach(powerUp => {
+                powerUp.mesh.position.x += BOUNCE_DISTANCE;
+            });
+        } else {
+            // Reset bouncing state
+            isBouncing = false;
+        }
+    }
+
+
     requestAnimationFrame(animate);
 
     bruin.update();
-    const speedLevel = Math.floor(score / 10);
+    const speedLevel = Math.floor(pipes_passed / 4);
     
-    let speedMultiplier = 0.03 + (speedLevel * 0.002);
+    let speedMultiplier = 0.03 + (speedLevel * 0.005);
     
     speedMultiplier = Math.min(speedMultiplier, 0.08);
     speedMultiplier = Math.max(0.03, speedMultiplier);
@@ -528,6 +559,7 @@ function animate() {
             if (!pipe.passed && bruin.mesh.position.x > pipe.basePipeTop.position.x) {
                 score++;
                 pipe.passed = true;
+                pipes_passed++;
                 updateScoreDisplay(score);
             }
         });
