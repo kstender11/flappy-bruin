@@ -41,18 +41,24 @@ class PowerUp {
         player.score += 50;
     }
 
-    // Neutralizer power-up: Prevents collision with next 5 pipes
     activateNeutralizer(player) {
-        console.log("Got here!")
         player.neutralizerActive = true;
-        player.neutralizerPipeCount = 6;
+        player.neutralizerPipeCount = 6; // Reset the pipe count
         setTimeout(() => {
             if (player.neutralizerActive) {
                 player.neutralizerActive = false;
-                console.log('Neutralizer deactivated after 10 seconds.');
+                pipe_arr.forEach(pipe => {
+                    if (pipe.neutralized) {
+                        pipe.resetColor();
+                        pipe.neutralized = false;
+                    }
+                });
+                console.log('Neutralizer deactivated after 6 seconds.');
             }
-        }, 6000); // 10 seconds in milliseconds
+        }, 6000); // 6 seconds
     }
+    
+    
 
     isNear(pipe) {
         const distance = Math.sqrt(
