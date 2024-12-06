@@ -32,11 +32,8 @@ class PowerUp {
     activateShield(player) {
         player.shielded = true;
         setTimeout(() => {
-            if (player.neutralizerActive) {
-                player.neutralizerActive = false;
-                console.log('Neutralizer deactivated after 10 seconds.');
-            }
-        }, 6000); // 10 seconds in milliseconds
+            player.shielded = false;
+        }, this.duration);
     }
 
     // Extra points power-up: Increases player's score
@@ -50,8 +47,11 @@ class PowerUp {
         player.neutralizerActive = true;
         player.neutralizerPipeCount = 6;
         setTimeout(() => {
-            player.neutralizerActive = false; // Deactivate after duration
-        }, this.duration);
+            if (player.neutralizerActive) {
+                player.neutralizerActive = false;
+                console.log('Neutralizer deactivated after 10 seconds.');
+            }
+        }, 6000); // 10 seconds in milliseconds
     }
 
     isNear(pipe) {

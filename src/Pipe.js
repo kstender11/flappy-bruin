@@ -36,13 +36,12 @@ class Pipe {
         this.boundingBoxTop = new THREE.Box3().setFromObject(this.basePipeTop);
         this.boundingBoxBottom = new THREE.Box3().setFromObject(this.basePipeBottom);
 
-        // Add both the top and bottom pipes to the array
         this.pipes = [this.basePipeTop, this.basePipeBottom];
     }
 
     resetColor() {
-        this.basePipeTop.material.color.setHex(0x8b0000); // Original pipe color
-        this.basePipeBottom.material.color.setHex(0x8b0000); // Original pipe color
+        this.basePipeTop.material.color.setHex(0x8b0000); 
+        this.basePipeBottom.material.color.setHex(0x8b0000); 
     }
 
     update(speed) {

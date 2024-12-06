@@ -67,17 +67,13 @@ class Bruin {
         if (this.gameStarted && !this.gameOver) {
             this.velocity += this.gravity;
 
-            // Translation matrix for Y-axis movement
             const translationMatrix = new THREE.Matrix4();
             translationMatrix.makeTranslation(0, this.velocity, 0);
 
-            // Apply the translation to the mesh
             this.mesh.applyMatrix4(translationMatrix);
 
-            // Update bounding box based on the collision sphere
             this.boundingBox.setFromObject(this.collisionSphere);
 
-            // Check for top and bottom boundaries
             if (this.mesh.position.y < -5 || this.mesh.position.y > this.topBoundary) {
                 this.gameOver = true;
             }

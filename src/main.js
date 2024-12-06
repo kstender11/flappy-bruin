@@ -51,8 +51,8 @@ const bruin = new Bruin();
 scene.add(bruin.mesh);
 
 
-const bruinLight = new THREE.PointLight(0xffffff, 10, 100); // White light, intensity, distance
-bruinLight.position.copy(bruin.mesh.position); // Set initial position to Bruin's position
+const bruinLight = new THREE.PointLight(0xffffff, 10, 100); 
+bruinLight.position.copy(bruin.mesh.position); 
 scene.add(bruinLight);
 
 let pipes = [];
@@ -112,8 +112,8 @@ if (!scoreDisplay) {
 // Function to add a pulsing effect when score updates
 function updateScoreDisplay(newScore) {
     scoreDisplay.innerText = `Score: ${newScore}`;
-    scoreDisplay.classList.add('pulse');  // Add the pulse class for animation
-    setTimeout(() => scoreDisplay.classList.remove('pulse'), 300);  // Remove after animation
+    scoreDisplay.classList.add('pulse');  
+    setTimeout(() => scoreDisplay.classList.remove('pulse'), 300); 
 }
 
 // Function to spawn pipes at intervals
@@ -149,19 +149,18 @@ window.addEventListener('mousedown', (event) => {
 });
 
 function checkBounds() {
-    const topBound = camera.position.y + 3.5; // Adjust based on your scene
-    const bottomBound = camera.position.y - 3.5; // Adjust based on your scene
+    const topBound = camera.position.y + 3.5; 
+    const bottomBound = camera.position.y - 3.5; 
 
     if (bruin.mesh.position.y > topBound) {
-        bruin.mesh.position.y = topBound; // Keep it within bounds
-        bruin.jumpDown();// Reverse direction
+        bruin.mesh.position.y = topBound; 
+        bruin.jumpDown();
     } else if (bruin.mesh.position.y < bottomBound) {
-        bruin.mesh.position.y = bottomBound; // Keep it within bounds
-        bruin.jump() // Reverse direction
+        bruin.mesh.position.y = bottomBound; 
+        bruin.jump() 
     }
 }
 
-// Display "Game Over" message
 // Display "Game Over" message and show the Restart button
 function displayGameOver() {
     const gameOverContainer = document.createElement('div');
@@ -182,7 +181,7 @@ function displayGameOver() {
 
     // Event listener for restarting the game
     restartButton.addEventListener('click', () => {
-        window.location.reload(); // Reload the page to restart the game
+        window.location.reload(); 
     });
 
     const style = document.createElement('style');
@@ -240,12 +239,11 @@ function displayGameOver() {
 function checkCollision() {
     if (bruin.neutralizerActive) {
         pipes.forEach((pipe, index) => {
-            // Check if pipe is within the next 5 pipes and hasn't been set to blue
             if (bruin.neutralizerPipeCount > 0 && !pipe.neutralized) {
-                pipe.basePipeTop.material.color.setHex(0x0000ff); // Set top pipe to blue
-                pipe.basePipeBottom.material.color.setHex(0x0000ff); // Set bottom pipe to blue
-                pipe.neutralized = true; // Mark pipe as neutralized
-                bruin.neutralizerPipeCount--; // Decrease count
+                pipe.basePipeTop.material.color.setHex(0x0000ff); 
+                pipe.basePipeBottom.material.color.setHex(0x0000ff); 
+                pipe.neutralized = true; 
+                bruin.neutralizerPipeCount--; 
             }
         });
 
@@ -254,19 +252,19 @@ function checkCollision() {
             bruin.neutralizerActive = false;
             pipes.forEach(pipe => {
                 if (pipe.neutralized) {
-                    pipe.resetColor(); // Restore original pipe color
-                    pipe.neutralized = false; // Reset flag
+                    pipe.resetColor(); 
+                    pipe.neutralized = false; 
                 }
             });
         }
-        return; // Skip collision detection while neutralizer is active
+        return; 
     }
 
     // Regular collision detection
     for (let pipe of pipes) {
         if (bruin.boundingBox.intersectsBox(pipe.boundingBoxTop) || bruin.boundingBox.intersectsBox(pipe.boundingBoxBottom)) {
-            pipe.basePipeTop.material.color.setHex(0x8b0000); // Collision pipe color
-            pipe.basePipeBottom.material.color.setHex(0x8b0000); // Collision pipe color
+            pipe.basePipeTop.material.color.setHex(0x8b0000); 
+            pipe.basePipeBottom.material.color.setHex(0x8b0000); 
             lives--;
 
             pipe.pipes.forEach(p => scene.remove(p));
@@ -390,8 +388,8 @@ function updatePowerUps() {
             powerUp.activate(bruin);
 
 
-            scene.remove(powerUp.mesh); // Remove the power-up mesh from the scene
-            powerUps.splice(index, 1); // Remove the power-up from the array after activation
+            scene.remove(powerUp.mesh); 
+            powerUps.splice(index, 1); 
         }
     });
 
@@ -431,18 +429,16 @@ function createPowerUpMesh(type) {
     }
 
    
-     // Load the texture and create the mesh
-     const geometry = new THREE.SphereGeometry(0.5, 32, 32); // Adjust geometry if needed
+     const geometry = new THREE.SphereGeometry(0.5, 32, 32); 
      const material = new THREE.MeshBasicMaterial();
  
-     // Load the texture asynchronously
      textureLoader.load(path, (texture) => {
-         material.map = texture; // Assign the loaded texture
-         material.needsUpdate = true; // Ensure material updates
+         material.map = texture; 
+         material.needsUpdate = true; 
      });
  
      const mesh = new THREE.Mesh(geometry, material);
-     mesh.rotation.y = 1.5;// Create the mesh with geometry and material
+     mesh.rotation.y = 1.5;
      return mesh;
 }
 
@@ -469,7 +465,6 @@ document.head.appendChild(livesStyle);
 
 let flag = true;
 
-// Update the animate function to include power-up updates
 function animate() {
 
     livesDisplay.innerText = `Lives: ${lives}`;
