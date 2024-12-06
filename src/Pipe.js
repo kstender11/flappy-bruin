@@ -40,6 +40,11 @@ class Pipe {
         this.pipes = [this.basePipeTop, this.basePipeBottom];
     }
 
+    resetColor() {
+        this.basePipeTop.material.color.setHex(0x8b0000); // Original pipe color
+        this.basePipeBottom.material.color.setHex(0x8b0000); // Original pipe color
+    }
+
     update(speed) {
         this.pipes.forEach(pipe => {
             pipe.position.x -= speed;

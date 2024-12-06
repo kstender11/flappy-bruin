@@ -238,30 +238,35 @@ function displayGameOver() {
 
 
 function checkCollision() {
-    for (let pipe of pipes) {
-        if (bruin.neutralizerActive) {
-            // Change pipe color to blue when neutralizer is active
-            pipe.basePipeTop.material.color.setHex(0x0000ff);
-            pipe.basePipeBottom.material.color.setHex(0x0000ff);
-            
-            // Decrement neutralizer pipe count
-            if (bruin.neutralizerPipeCount > 0) {
-                bruin.neutralizerPipeCount--;
+    if (bruin.neutralizerActive) {
+        pipes.forEach((pipe, index) => {
+            // Check if pipe is within the next 5 pipes and hasn't been set to blue
+            if (bruin.neutralizerPipeCount > 0 && !pipe.neutralized) {
+                pipe.basePipeTop.material.color.setHex(0x0000ff); // Set top pipe to blue
+                pipe.basePipeBottom.material.color.setHex(0x0000ff); // Set bottom pipe to blue
+                pipe.neutralized = true; // Mark pipe as neutralized
+                bruin.neutralizerPipeCount--; // Decrease count
             }
-            
-            // Deactivate neutralizer when 5 pipes have passed
-            if (bruin.neutralizerPipeCount <= 0) {
-                bruin.neutralizerActive = false;
-                // Restore original pipe color
-                pipe.basePipeTop.material.color.setHex(0x8b0000);
-                pipe.basePipeBottom.material.color.setHex(0x8b0000);
-            }
-            continue; // Skip collision detection
-        }
+        });
 
-        else if (bruin.boundingBox.intersectsBox(pipe.boundingBoxTop) || bruin.boundingBox.intersectsBox(pipe.boundingBoxBottom)) {
-            pipe.basePipeTop.material.color.setHex(0x8b0000);
-            pipe.basePipeBottom.material.color.setHex(0x8b0000);
+        // Deactivate neutralizer if all pipes have been handled
+        if (bruin.neutralizerPipeCount <= 0) {
+            bruin.neutralizerActive = false;
+            pipes.forEach(pipe => {
+                if (pipe.neutralized) {
+                    pipe.resetColor(); // Restore original pipe color
+                    pipe.neutralized = false; // Reset flag
+                }
+            });
+        }
+        return; // Skip collision detection while neutralizer is active
+    }
+
+    // Regular collision detection
+    for (let pipe of pipes) {
+        if (bruin.boundingBox.intersectsBox(pipe.boundingBoxTop) || bruin.boundingBox.intersectsBox(pipe.boundingBoxBottom)) {
+            pipe.basePipeTop.material.color.setHex(0x8b0000); // Collision pipe color
+            pipe.basePipeBottom.material.color.setHex(0x8b0000); // Collision pipe color
             lives--;
 
             pipe.pipes.forEach(p => scene.remove(p));
