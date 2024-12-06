@@ -51,7 +51,7 @@ const bruin = new Bruin();
 scene.add(bruin.mesh);
 
 
-const bruinLight = new THREE.PointLight(0xffffff, 3, 50); // White light, intensity, distance
+const bruinLight = new THREE.PointLight(0xffffff, 10, 50); // White light, intensity, distance
 bruinLight.position.copy(bruin.mesh.position); // Set initial position to Bruin's position
 scene.add(bruinLight);
 
@@ -59,7 +59,7 @@ let pipe_arr = [];
 let pipeSpawnInterval = 500;
 let frameCount = 0;
 let score = 0;
-let speed = 0.03;
+let speed = 0.03; 
 
 
 let scoreDisplay = document.getElementById('score');
