@@ -15,7 +15,7 @@ class Cloud {
         });
 
 
-        const numSpheres = 5 + Math.floor(Math.random() * 5); // 5 to 9 spheres
+        const numSpheres = 5 + Math.floor(Math.random() * 5); 
         for (let i = 0; i < numSpheres; i++) {
             const sphere = new THREE.Mesh(geometry, material);
             sphere.position.set(

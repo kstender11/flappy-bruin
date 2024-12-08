@@ -10,13 +10,11 @@ class Bruin {
         this.neutralizerActive = false;
         this.neutralizerPipeCount = 0;
 
-        // Sphere for collision detection
         this.collisionSphere = new THREE.Mesh(
             new THREE.SphereGeometry(0.3, 32, 32),
             new THREE.MeshBasicMaterial({ visible: false }) 
         );
 
-        // Plane for the bear image
         const textureLoader = new THREE.TextureLoader();
         const bearTexture = textureLoader.load('./src/textures/bear_face.png');
         this.bearMesh = new THREE.Mesh(

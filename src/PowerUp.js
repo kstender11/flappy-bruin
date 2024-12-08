@@ -2,13 +2,13 @@ import * as THREE from 'three';
 
 class PowerUp {
     constructor(type, position) {
-        this.type = type; // Type of power-up (shield, extraPoints, bomb, neutralizer)
-        this.position = position; // Position of the power-up in the game
-        this.active = true; // Indicates if the power-up is active
+        this.type = type; 
+        this.position = position; 
+        this.active = true; 
         this.duration = 5000;
         this.boundingBox = new THREE.Box3().setFromCenterAndSize(
             new THREE.Vector3(position.x, position.y, 0),
-            new THREE.Vector3(1, 1, 1) // Adjust size as needed
+            new THREE.Vector3(1, 1, 1) 
         );
     }
 
@@ -28,7 +28,6 @@ class PowerUp {
         }
     }
 
-    // Shield power-up: Protects the player from one hit
     activateShield(player) {
         player.shielded = true;
         setTimeout(() => {
@@ -36,14 +35,13 @@ class PowerUp {
         }, this.duration);
     }
 
-    // Extra points power-up: Increases player's score
     activateExtraPoints(player) {
         player.score += 50;
     }
 
     activateNeutralizer(player) {
         player.neutralizerActive = true;
-        player.neutralizerPipeCount = 9; // Reset the pipe count
+        player.neutralizerPipeCount = 5; // Reset the pipe count
         setTimeout(() => {
             if (player.neutralizerActive) {
                 player.neutralizerActive = false;
@@ -55,7 +53,7 @@ class PowerUp {
                 });
                 console.log('Neutralizer deactivated after 6 seconds.');
             }
-        }, 9000); // 6 seconds
+        }, 1000); // 6 seconds
     }
     
     

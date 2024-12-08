@@ -155,6 +155,7 @@ window.addEventListener('mousedown', (event) => {
     }
 });
 
+//checking bounds for player
 function checkBounds() {
     const topBound = camera.position.y + 3.5; 
     const bottomBound = camera.position.y - 3.5; 
@@ -168,7 +169,7 @@ function checkBounds() {
     }
 }
 
-// Display "Game Over" message and show the Restart button
+// handle game over logic 
 function displayGameOver() {
     const gameOverContainer = document.createElement('div');
     gameOverContainer.id = 'gameOverContainer';
@@ -180,13 +181,11 @@ function displayGameOver() {
     gameOverContainer.appendChild(gameOverText);
     document.body.appendChild(gameOverContainer);
 
-    // Create the restart button
     const restartButton = document.createElement('button');
     restartButton.id = 'restartButton';
     restartButton.innerText = 'Restart';
     gameOverContainer.appendChild(restartButton);
 
-    // Event listener for restarting the game
     restartButton.addEventListener('click', () => {
         window.location.reload(); 
     });
@@ -243,17 +242,20 @@ function displayGameOver() {
 }
 
 
+
+
+//handle collision logic for the bruin and the pipes 
 function checkCollision() {
-    if (bruin.neutralizerActive) {
+    if (bruin.neutralizerActive) { //neutralizer logic for the powerup
         pipe_arr.forEach((pipe) => {
             if (!pipe.neutralized) {
-                pipe.basePipeTop.material.color.setHex(0x0000ff); // Set blue color for neutralized pipes
+                pipe.basePipeTop.material.color.setHex(0x0000ff); 
                 pipe.basePipeBottom.material.color.setHex(0x0000ff);
-                pipe.neutralized = true; // Mark the pipe as neutralized
+                pipe.neutralized = true; 
             }
         });
 
-        // Skip collision logic during neutralizer effect
+        
         return;
     }
 
@@ -263,14 +265,12 @@ function checkCollision() {
             bruin.boundingBox.intersectsBox(pipe.boundingBoxTop) ||
             bruin.boundingBox.intersectsBox(pipe.boundingBoxBottom)
         ) {
-            // Check if pipe is neutralized (blue)
             if (pipe.neutralized) {
                 console.log("Hit a neutralized pipe. No penalty.");
-                continue; // Skip penalty for hitting a blue pipe
+                continue; 
             }
 
-            // Regular penalty for hitting non-neutralized pipes
-            pipe.basePipeTop.material.color.setHex(0x8b0000); // Change to red
+            pipe.basePipeTop.material.color.setHex(0x8b0000); 
             pipe.basePipeBottom.material.color.setHex(0x8b0000);
             lives--;
 
@@ -288,7 +288,7 @@ function checkCollision() {
 }
 
 
-// Spawn initial set of pipes
+// Spawn initial set of 5 pipes
 function spawnInitialPipes() {
     const initialPipeCount = 5;
     const pipeSpacing = 5;
@@ -316,6 +316,9 @@ const zStart = -15;
 const zEnd = -5;
 const cloudSpacing = 6;
 
+
+
+//spawning logic for the clouds
 function generateRandomPosition(existingClouds) {
     let x, y, z;
     let isOverlapping;
@@ -344,28 +347,25 @@ for (let i = 0; i < cloudCount; i++) {
     clouds.push(cloud);
 }
 
-// Array to hold active power-ups
+
+
 let powerUps = [];
 
-// Function to spawn a power-up at a random position
+
+//powerup spawning logic 
 function spawnPowerUp() {
-    // Ensure there are at least 2 pipes to spawn between
     if (pipe_arr.length < 2) return;
 
-    // Find the two most recently spawned pipes
     const lastPipe = pipe_arr[pipe_arr.length - 1];
     const secondLastPipe = pipe_arr[pipe_arr.length - 2];
 
-    // Calculate the midpoint between these two pipes
     const xPosition = (lastPipe.pipes[0].position.x + secondLastPipe.pipes[0].position.x) / 2;
 
-    // Check if a power-up already exists in this section
     const existingPowerUp = powerUps.some(powerUp => 
         powerUp.mesh.position.x > secondLastPipe.pipes[0].position.x && 
         powerUp.mesh.position.x < lastPipe.pipes[0].position.x
     );
 
-    // Only spawn if no power-up exists in this pipe section
     if (!existingPowerUp) {
 
         const gapYPosition = (Math.random() - 0.5) * 3;
@@ -377,9 +377,16 @@ function spawnPowerUp() {
 
         const powerUpTypes = ['life', 'extraPoints', 'bomb', 'neutralizer'];
         const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+        let chosenType = randomType;
 
-        const newPowerUp = new PowerUp(randomType, randomPosition);
-        newPowerUp.mesh = createPowerUpMesh(randomType);
+        if(randomType === "neutralizer" ) {
+            if(Math.random() >= 0.40) {
+                chosenType = 'extraPoints'
+            }
+        }
+
+        const newPowerUp = new PowerUp(chosenType, randomPosition);
+        newPowerUp.mesh = createPowerUpMesh(chosenType);
         newPowerUp.mesh.position.set(randomPosition.x, randomPosition.y, 0);
         scene.add(newPowerUp.mesh);
         powerUps.push(newPowerUp);
@@ -425,30 +432,26 @@ function updatePowerUps() {
     });
 }
 
-function startPowerUpSpawning() {
-    //setInterval(spawnPowerUp, 2000);
-}
+
 
 
 function createPowerUpMesh(type) {
-    let color;
     let path;
 
     switch (type) {
         case 'life':
-            path =  './src/textures/heart_texture.jpg'; // Green for shield
+            path =  './src/textures/heart_texture.jpg'; 
             break;
         case 'extraPoints':
-            path =  './src/textures/star_texture.jpg'; // Yellow for extra points
-            break;
+            path =  './src/textures/star_texture.jpg'; 
         case 'bomb':
-            path =  './src/textures/bomb_texture.jpg'; // Red for bomb
+            path =  './src/textures/bomb_texture.jpg'; 
             break;
         case 'neutralizer':
-            path = './src/textures/ucla_texture.jpg'; // Blue for neutralizer
+            path = './src/textures/ucla_texture.jpg'; 
             break;
         default:
-            path =  './src/textures/heart_texture.jpg'; // Default to white
+            path =  './src/textures/heart_texture.jpg'; 
     }
 
    
@@ -465,13 +468,15 @@ function createPowerUpMesh(type) {
      return mesh;
 }
 
-let lives = 3; // Initialize lives
+let lives = 3; 
 let livesDisplay = document.createElement('div');
 livesDisplay.id = 'lives';
 livesDisplay.innerText = `Lives: ${lives}`;
 document.body.appendChild(livesDisplay);
 
-// Add CSS styles for the lives display
+
+
+// CSS for the lives counter
 const livesStyle = document.createElement('style');
 livesStyle.textContent = `
     #lives {
@@ -488,6 +493,8 @@ document.head.appendChild(livesStyle);
 
 let flag = true;
 let pipes_passed = 0;
+
+
 
 function animate() {
 
@@ -509,7 +516,6 @@ function animate() {
         const BOUNCE_DISTANCE = speed * 2;
         
         if (elapsedTime < 300) {
-            // Move everything to the right during bounce
             pipe_arr.forEach(pipe => {
                 pipe.pipes.forEach(p => {
                     p.position.x += BOUNCE_DISTANCE;
@@ -524,7 +530,7 @@ function animate() {
                 powerUp.mesh.position.x += BOUNCE_DISTANCE;
             });
         } else {
-            // Reset bouncing state
+            
             isBouncing = false;
         }
     }
@@ -547,10 +553,10 @@ function animate() {
     livesDisplay.innerText = `Lives: ${lives}`;
     checkBounds();
     checkCollision();
-    updatePowerUps(); // Update power-ups each frame
+    updatePowerUps(); 
     bruinLight.position.copy(bruin.mesh.position);
     if (bruin.gameStarted) {
-        if (pipe_arr.length < 5) {  // For example, keep at least 5 pipes
+        if (pipe_arr.length < 5) {  
             spawnPipe();
         }
 

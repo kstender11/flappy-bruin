@@ -22,17 +22,14 @@ class Pipe {
 
         const pipeGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, pipeHeight, 32);
 
-        // Top pipe
         this.basePipeTop = new THREE.Mesh(pipeGeometry, pipeMaterial);
         this.basePipeTop.position.set(xPosition, gapYPosition + gapHeight / 2 + pipeHeight / 2, 0);
         this.basePipeTop.rotation.set(0, 0, 0); // Explicitly reset any rotation
 
-        // Bottom pipe
         this.basePipeBottom = new THREE.Mesh(pipeGeometry, pipeMaterial);
         this.basePipeBottom.position.set(xPosition, gapYPosition - gapHeight / 2 - pipeHeight / 2, 0);
         this.basePipeBottom.rotation.set(0, 0, 0); // Explicitly reset any rotation
 
-        // Collision detection
         this.boundingBoxTop = new THREE.Box3().setFromObject(this.basePipeTop);
         this.boundingBoxBottom = new THREE.Box3().setFromObject(this.basePipeBottom);
 
