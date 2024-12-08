@@ -390,6 +390,7 @@ function updatePowerUps() {
         powerUp.boundingBox = new THREE.Box3().setFromObject(powerUp.mesh);
 
         if (bruin.boundingBox.intersectsBox(powerUp.boundingBox)) {
+            console.log(powerUp.type)
             if (powerUp.type === "extraPoints") {
                 score += 20;
             }
@@ -432,6 +433,7 @@ function createPowerUpMesh(type) {
             break;
         case 'extraPoints':
             path =  './src/textures/star_texture.jpg'; 
+            break;
         case 'bomb':
             path =  './src/textures/bomb_texture.jpg'; 
             break;
@@ -494,7 +496,6 @@ function animate() {
     }
 
     if (bruin.gameStarted && flag) {
-        startPowerUpSpawning();
         flag = false;
     }
 
