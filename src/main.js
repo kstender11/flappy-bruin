@@ -4,7 +4,6 @@ import Pipe from './Pipe.js';
 import Cloud from './cloud.js';
 import PowerUp from './PowerUp.js';
 
-// Set up the scene, camera, and renderer
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 5;
@@ -35,24 +34,13 @@ textureLoader.load('./src/textures/clouds.jpg', (cloudTexture) => {
     scene.add(sky);
 });
 
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); 
-// directionalLight.position.set(10, 10, 10);
-// scene.add(directionalLight);
-
-
-// const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); 
-// scene.add(ambientLight);
-
-// const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xaaaaaa, 0.5); 
-// scene.add(hemisphereLight); 
-
 
 const bruin = new Bruin();
 scene.add(bruin.mesh);
 
 
-const bruinLight = new THREE.PointLight(0xffffff, 8, 50); // White light, intensity, distance
-bruinLight.position.copy(bruin.mesh.position); // Set initial position to Bruin's position
+const bruinLight = new THREE.PointLight(0xffffff, 8, 50);
+bruinLight.position.copy(bruin.mesh.position); 
 scene.add(bruinLight);
 
 let pipe_arr = [];
@@ -71,7 +59,7 @@ if (!scoreDisplay) {
     scoreDisplay.innerText = 'Score: 0';
     document.body.appendChild(scoreDisplay);
 
-    // Add CSS styles for the score display
+    // CSS styles for the score display
     const style = document.createElement('style');
     style.textContent = `
         /* Keyframes for rotating UCLA gradient and pulsing on score change */
@@ -112,14 +100,14 @@ if (!scoreDisplay) {
     document.head.appendChild(style);
 }
 
-// Function to add a pulsing effect when score updates
+// Pulsing effect when score updates
 function updateScoreDisplay(newScore) {
     scoreDisplay.innerText = `Score: ${newScore}`;
     scoreDisplay.classList.add('pulse');  
     setTimeout(() => scoreDisplay.classList.remove('pulse'), 300); 
 }
 
-// Function to spawn pipes at intervals
+// Spawn pipes
 function spawnPipe() {
     const lastPipe = pipe_arr[pipe_arr.length - 1];
     const pipeSpacing = 5;
@@ -136,7 +124,7 @@ function spawnPipe() {
     pipe_arr.push(pipe);
 }
 
-// Handle user input for jumping
+// User input for jumping
 window.addEventListener('keydown', (event) => {
     if (event.code === 'ArrowUp' || event.code === 'Space') {
         if (!bruin.gameStarted) {
@@ -169,7 +157,7 @@ function checkBounds() {
     }
 }
 
-// handle game over logic 
+// Game over logic 
 function displayGameOver() {
     const gameOverContainer = document.createElement('div');
     gameOverContainer.id = 'gameOverContainer';
@@ -395,7 +383,7 @@ function spawnPowerUp() {
 
 
 
-// Function to update and render power-ups
+// Update and render power-ups
 function updatePowerUps() {
     powerUps.forEach((powerUp, index) => {
         powerUp.mesh.position.x -= speed;

@@ -24,11 +24,11 @@ class Pipe {
 
         this.basePipeTop = new THREE.Mesh(pipeGeometry, pipeMaterial);
         this.basePipeTop.position.set(xPosition, gapYPosition + gapHeight / 2 + pipeHeight / 2, 0);
-        this.basePipeTop.rotation.set(0, 0, 0); // Explicitly reset any rotation
+        this.basePipeTop.rotation.set(0, 0, 0); 
 
         this.basePipeBottom = new THREE.Mesh(pipeGeometry, pipeMaterial);
         this.basePipeBottom.position.set(xPosition, gapYPosition - gapHeight / 2 - pipeHeight / 2, 0);
-        this.basePipeBottom.rotation.set(0, 0, 0); // Explicitly reset any rotation
+        this.basePipeBottom.rotation.set(0, 0, 0); 
 
         this.boundingBoxTop = new THREE.Box3().setFromObject(this.basePipeTop);
         this.boundingBoxBottom = new THREE.Box3().setFromObject(this.basePipeBottom);
